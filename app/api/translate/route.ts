@@ -654,16 +654,18 @@ function wait(ms: number) {
   });
 }
 
-async function fetchDeepSeekWithRetry(
+async function fetchGLMWithRetry(
   apiKey: string,
   body: Record<string, unknown>,
+  baseUrl: string,
 ) {
+  const endpoint = `${baseUrl.replace(/\/+$/, "")}/chat/completions`;
   const retryDelays = [800];
   let lastError: unknown;
 
   for (let attempt = 0; attempt <= retryDelays.length; attempt += 1) {
     try {
-      const response = await fetch("https://api.deepseek.com/chat/completions", {
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${apiKey}`,
@@ -883,10 +885,17 @@ export async function POST(request: NextRequest) {
   }
 
   const apiKey =
-    process.env.DEEPSEEK_API_KEY ||
-    (typeof runtime.environment.DEEPSEEK_API_KEY === "string"
-      ? runtime.environment.DEEPSEEK_API_KEY
+    process.env.GLM_API_KEY ||
+    (typeof runtime.environment.GLM_API_KEY === "string"
+      ? runtime.environment.GLM_API_KEY
       : "");
+
+  const glmBaseUrl =
+    process.env.GLM_API_BASE_URL?.trim() ||
+    (typeof runtime.environment.GLM_API_BASE_URL === "string"
+      ? runtime.environment.GLM_API_BASE_URL.trim()
+      : "") ||
+    "https://open.bigmodel.cn/api/paas/v4/";
 
   if (!apiKey) {
     return generationJson(request, runtime, analyticsConfig, generation, {
@@ -912,11 +921,20 @@ export async function POST(request: NextRequest) {
       plainMode,
     });
     generation.promptVersion = promptSet.promptVersion;
-    const requestBody = {
+    const requestBody: {
+      model: string;
+      messages: Array<{ role: string; content: string }>;
+      max_tokens: number;
+      temperature: number;
+      stream: boolean;
+      thinking?: { type: string };
+    } = {
       model:
-        (typeof runtime.environment.DEEPSEEK_MODEL === "string"
-          ? runtime.environment.DEEPSEEK_MODEL
-          : process.env.DEEPSEEK_MODEL) || "deepseek-v4-flash",
+        process.env.GLM_MODEL ||
+        (typeof runtime.environment.GLM_MODEL === "string"
+          ? runtime.environment.GLM_MODEL
+          : "") ||
+        "glm-4-flash",
       messages: [
         {
           role: "system",
@@ -935,8 +953,12 @@ export async function POST(request: NextRequest) {
         : Number(runtime.environment.MAX_OUTPUT_TOKENS || process.env.MAX_OUTPUT_TOKENS || 720),
       temperature: isPlainDirection ? 0.18 : 0.68,
       stream: false,
-      thinking: { type: "disabled" },
     };
+
+    // 仅 DeepSeek 官方接口需要显式关闭思考；智谱 GLM 等 OpenAI 兼容接口不认识该字段时不发送。
+    if (glmBaseUrl.includes("deepseek.com")) {
+      requestBody.thinking = { type: "disabled" };
+    }
 
     let data: {
       choices?: Array<{
@@ -949,11 +971,23 @@ export async function POST(request: NextRequest) {
     const minimumResultLength = getMinimumResultLength(direction, text, level);
 
     for (let attempt = 0; attempt < 2; attempt += 1) {
-      const response = await fetchDeepSeekWithRetry(apiKey, requestBody);
+      const response = await fetchGLMWithRetry(
+        apiKey,
+        requestBody,
+        glmBaseUrl,
+      );
       data = await response.json();
 
       if (!response.ok) {
-        console.error("DeepSeek API error status:", response.status);
+        console.error(
+          "GLM API error status:",
+          response.status,
+          "model:",
+          requestBody.model,
+          "base:",
+          glmBaseUrl,
+          JSON.stringify(data).slice(0, 1000),
+        );
         return generationJson(request, runtime, analyticsConfig, generation,
           { error: "大儒暂未回应，请稍后再试。" },
           { status: 502, success: false, errorClass: "provider_error" },

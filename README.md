@@ -131,13 +131,14 @@ Open [http://localhost:3000](http://localhost:3000).
 `.env.local`:
 
 ```env
-DEEPSEEK_API_KEY=sk-your-key-here
-DEEPSEEK_MODEL=deepseek-v4-flash
+GLM_API_KEY=your-glm-api-key-here
+GLM_MODEL=glm-4-flash
+GLM_API_BASE_URL=https://open.bigmodel.cn/api/paas/v4/
 MAX_OUTPUT_TOKENS=720
 ```
 
-If `DEEPSEEK_API_KEY` is missing, the app falls back to local demo output and
-does not call DeepSeek.
+If `GLM_API_KEY` is missing, the app falls back to local demo output and
+does not call the GLM API.
 
 ## Project Structure
 
@@ -185,7 +186,7 @@ between 问礼 and 释礼 without adding a second endpoint.
 
 Default runtime choices:
 
-- Model: `deepseek-v4-flash`.
+- Model: `glm-4-flash`.
 - Thinking mode: disabled.
 - User input limit: 300 Chinese characters for 问礼, 900 Chinese characters for 释礼.
 - Output limit: configured by `MAX_OUTPUT_TOKENS`.
@@ -262,7 +263,7 @@ recommended Cloudflare path.
 ```bash
 npm install
 npx wrangler login
-npx wrangler secret put DEEPSEEK_API_KEY
+npx wrangler secret put GLM_API_KEY
 npx wrangler secret put RESPONSE_FEEDBACK_SECRET
 npx wrangler d1 migrations apply zhouli-analytics --remote
 npm run deploy
@@ -284,7 +285,7 @@ secrets should be stored with the hosting platform's secret manager.
 ### Vercel
 
 1. Import the repository into Vercel.
-2. Add `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL`, and `MAX_OUTPUT_TOKENS`.
+2. Add `GLM_API_KEY`, `GLM_MODEL`, `GLM_API_BASE_URL`, and `MAX_OUTPUT_TOKENS`.
 3. Deploy.
 
 ### Self-Hosted Node

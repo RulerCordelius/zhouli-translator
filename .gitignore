@@ -23,3 +23,6 @@ scripts/toy-adapter.test.ts
 scripts/build-meme-stress-sample.mjs
 scripts/deepseek-roundtrip-500.mjs
 scripts/deepseek-roundtrip-rejudge.mjs
+
+# temp analysis output
+.drops/

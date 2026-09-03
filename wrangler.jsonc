@@ -38,7 +38,8 @@
     }
   ],
   "vars": {
-    "DEEPSEEK_MODEL": "deepseek-v4-flash",
+    "GLM_MODEL": "glm-4-flash",
+    "GLM_API_BASE_URL": "https://open.bigmodel.cn/api/paas/v4/",
     "MAX_OUTPUT_TOKENS": "720",
     "ANALYTICS_ENABLED": "true",
     "FEEDBACK_UI_ENABLED": "true",

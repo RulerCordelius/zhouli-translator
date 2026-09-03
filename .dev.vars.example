@@ -1,7 +1,8 @@
 # 本地 Wrangler/Cloudflare Worker 开发变量。
 # 复制为 .dev.vars 后填写，不要提交 .dev.vars。
-DEEPSEEK_API_KEY=sk-your-key-here
-DEEPSEEK_MODEL=deepseek-v4-flash
+GLM_API_KEY=your-glm-api-key-here
+GLM_MODEL=glm-4-flash
+GLM_API_BASE_URL=https://open.bigmodel.cn/api/paas/v4/
 MAX_OUTPUT_TOKENS=720
 ANALYTICS_ENABLED=false
 FEEDBACK_UI_ENABLED=false
